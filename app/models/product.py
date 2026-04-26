@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from db import Base
+from .base import Base
 
 class Product(Base):
     __tablename__ = "product"

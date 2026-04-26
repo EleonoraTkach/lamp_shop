@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException
-from schemas.product import Product, ProductCreate
 import asyncpg
-from db.db import DATABASE_URL
-from db.db import init_db
-from routers.catalog import router as catalog_router
+from db import DATABASE_URL
+from db import init_db
+from routers import category_router,product_router
 
 app = FastAPI(
     title="Пример FastAPI",
@@ -12,15 +11,18 @@ app = FastAPI(
 )
 
 @app.on_event("startup")
-def startup():
-    init_db()
+async def startup():
+    await init_db()
 
-app.include_router(catalog_router)
+
+app.include_router(category_router)
+app.include_router(product_router)
 
 @app.get("/")
 def read_root():
     return {"message": "Привет! Интерактивная документация: /docs и /redoc"}
 
+'''
 @app.get("/health")
 async def root():
     databases = await get_databases()
@@ -33,3 +35,4 @@ async def get_databases():
     return [record['datname'] for record in result]
   finally:
     await conn.close()
+'''
