@@ -3,12 +3,12 @@ import os
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from models import Category,Product,Base
+from models import Order,OrderItem,Base
 
 
 DB_USER = os.getenv("DB_USER", "user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "super_secret_password")
-DB_HOST = os.getenv("DB_HOST", "postgres_shop_db")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "pass")
+DB_HOST = os.getenv("DB_HOST", "order_db")
 DB_NAME = os.getenv("DB_NAME", "shop")
 
 DATABASE_URL = os.getenv("DATABASE_URL",
@@ -24,6 +24,8 @@ AsyncSessionLocal = sessionmaker(
 
 async def init_db():
     async with engine.begin() as conn:
+        #await conn.run_sync(Base.metadata.drop_all)
+        #print("Удалтли")
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_session():

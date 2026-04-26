@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  postgres:
+  catalog_db:
     image: postgres:15
-    container_name: postgres_shop_db
+    container_name: catalog_db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,35 +11,74 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - catalog_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 2s
       timeout: 2s
       retries: 5
 
-  app:
+  catalog_service:
     build:
-        context: app
-        dockerfile: Dockerfile
-    container_name: fast-api_app
+      context: catalog_service
+      dockerfile: Dockerfile
+    container_name: catalog_service
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shop_db:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@catalog_db:5432/${POSTGRES_DB}
     depends_on:
-      postgres:
+      catalog_db:
         condition: service_healthy
     networks:
       - app-network
     volumes:
-      - ./app:/app
+      - ./catalog_service:/catalog_service
+
+
+  order_db:
+    image: postgres:15
+    container_name: order_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5436:5432"
+    volumes:
+      - order_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  order_service:
+    build:
+      context: order_service
+      dockerfile: Dockerfile
+    container_name: order_service
+    ports:
+      - "8001:8001"
+    environment:
+      CATALOG_URL: http://catalog_service:8000
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@order_db:5432/${POSTGRES_DB}
+    depends_on:
+      order_db:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - ./order_service:/order_service
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  catalog_data:
+  order_data:
