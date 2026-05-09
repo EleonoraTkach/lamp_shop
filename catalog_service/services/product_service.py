@@ -17,6 +17,16 @@ class ProductService(BaseService):
 
         return obj
 
+    async def get_all(self, delete_flg:bool | None, skip: int, limit: int | None):
+        items = await super().get_all(delete_flg,skip,limit)
+
+        if not items:
+            raise NotFoundError("products not found")
+
+        return {
+            "items": items
+        }
+
     async def ensure_category_exists(self, category_id: int, delete_flg:bool | None):
         category = await self.repo.category_exists(category_id, delete_flg)
 

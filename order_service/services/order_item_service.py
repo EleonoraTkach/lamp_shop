@@ -27,21 +27,57 @@ class OrderItemService(BaseService):
 
         return order
 
-    async def create_bulk(self, order_id: int, items):
+    async def create_custom_bulk(self, order_id: int, items):
+        if not items:
+            raise ConflictError("Список товаров пуст")
+
+        await self.ensure_order_exists(order_id, False)
+        items_data = []
+
+        for item in items:
+            if item.image_url and item.quantity>0:
+                items_data.append(item.model_dump())
+            else:
+                raise ConflictError("Ссылка должна быть и количество товаров больше 0")
+
+        return await self.repo.create_bulk(order_id, items_data)
+
+    async def create_regular_bulk(self, order_id: int, items):
         if not items:
             raise ConflictError("Список товаров пуст")
 
         await self.ensure_order_exists(order_id, False)
 
-        for item in items:
-            exists = await self.catalog_client.product_exists(item.product_id)
+        valid_items = []
 
-            if not exists:
+        for item in items:
+            product = await self.catalog_client.get_product(item.product_id)
+
+            if not product:
                 raise ConflictError(f"Product {item.product_id} not found")
 
-        items = [item.model_dump() for item in items]
+            qnt = min(item.quantity, product["quantity"])
 
-        return await self.repo.create_bulk(order_id, items)
+            if qnt > 0:
+                item.quantity = qnt
+                valid_items.append(item)
+
+        if not valid_items:
+            raise ConflictError("Нет доступных товаров для добавления")
+
+        items_data = [item.model_dump() for item in valid_items]
+
+        for item in valid_items:
+            product = await self.catalog_client.get_product(item.product_id)
+
+            new_quantity = product["quantity"] - item.quantity
+
+            await self.catalog_client.update_quantity(
+                item.product_id,
+                new_quantity
+            )
+
+        return await self.repo.create_bulk(order_id, items_data)
 
     async def get_by_order(self, order_id: int, delete_flg:bool | None, skip: int, limit: int | None):
         await self.ensure_order_exists(order_id, delete_flg=None)

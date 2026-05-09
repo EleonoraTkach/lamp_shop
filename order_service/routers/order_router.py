@@ -1,15 +1,75 @@
 from fastapi import APIRouter, Depends, Query
-from services import OrderService, get_order_service
-from schemas import OrderCreate, OrderUpdate
+from services import OrderService, get_order_service,OrderItemService,get_order_item_service
+from schemas import OrderCreate, OrderUpdate, CustomOrderCreateWithItems,RegularOrderCreateWithItems
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 @router.post("")
 async def create_order(
     data: OrderCreate,
+    is_custom: bool = False,
     service: OrderService = Depends(get_order_service)
 ):
-    return await service.create(data)
+    return await service.create(data, is_custom=is_custom)
+
+@router.post("/custom")
+async def create_custom_order_with_items(
+    data: CustomOrderCreateWithItems,
+    order_service: OrderService = Depends(get_order_service),
+    order_item_service: OrderItemService = Depends(get_order_item_service)
+):
+        order = None
+
+        try:
+            order = await order_service.create_order(data.order, is_custom=True)
+
+            items = await order_item_service.create_custom_bulk(
+                order.id,
+                data.items
+            )
+
+            return {
+                "order": order,
+                "items": items
+            }
+
+        except Exception as e:
+            if order:
+                try:
+                    await self.repo.delete(order.id)
+                except Exception:
+                    pass
+            raise
+
+
+@router.post("/regular")
+async def create_regular_order_with_items(
+    data: RegularOrderCreateWithItems,
+    order_service: OrderService = Depends(get_order_service),
+    order_item_service: OrderItemService = Depends(get_order_item_service)
+):
+        order = None
+
+        try:
+            order = await order_service.create_order(data.order, is_custom=False)
+
+            items = await order_item_service.create_regular_bulk(
+                order.id,
+                data.items
+            )
+
+            return {
+                "order": order,
+                "items": items
+            }
+
+        except Exception as e:
+            if order:
+                try:
+                    await self.repo.delete(order.id)
+                except Exception:
+                    pass
+            raise
 
 
 @router.get("/{id}")

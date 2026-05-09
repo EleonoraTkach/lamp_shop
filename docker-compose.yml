@@ -75,6 +75,43 @@ services:
     volumes:
       - ./order_service:/order_service
 
+  review_db:
+    image: postgres:15
+    container_name: review_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5437:5432"
+    volumes:
+      - review_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  review_service:
+    build:
+      context: review_service
+      dockerfile: Dockerfile
+    container_name: review_service
+    ports:
+      - "8002:8002"
+    environment:
+      CATALOG_URL: http://catalog_service:8000
+      ORDER_URL: http://order_service:8001
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@review_db:5432/${POSTGRES_DB}
+    depends_on:
+      review_db:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - ./review_service:/review_service
 networks:
   app-network:
     driver: bridge
@@ -82,3 +119,4 @@ networks:
 volumes:
   catalog_data:
   order_data:
+  review_data:

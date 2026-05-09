@@ -21,7 +21,7 @@ class Order(Base):
     phone_number = Column(String, nullable=False)
     user_full_name = Column(String, nullable=False)
 
-    preorder_id = Column(Integer, nullable=True)
+    is_custom = Column(Boolean, nullable=False, default=False)
 
     total_cost = Column(Numeric(10, 2), nullable=False, default=0)
 

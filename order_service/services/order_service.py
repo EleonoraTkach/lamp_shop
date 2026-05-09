@@ -9,9 +9,9 @@ class OrderService(BaseService):
         super().__init__(repo)
         self.repo = repo
 
-    async def create(self, data):
+    async def create_order(self, data, is_custom: bool = False):
+        return await self.repo.create(data.model_dump(), is_custom)
 
-        return await self.repo.create(data.model_dump())
 
     async def get_by_id(self, id: int,delete_flg:bool | None):
         obj = await super().get_by_id(id,delete_flg)

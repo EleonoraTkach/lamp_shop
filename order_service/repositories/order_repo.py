@@ -14,8 +14,8 @@ class OrderRepository(BaseRepository[Order]):
         super().__init__(db)
         self.db = db
 
-    async def create(self, data: dict) -> Order:
-        order = Order(**data)
+    async def create(self, data: dict, is_custom: bool = False) -> Order:
+        order = Order(**data,is_custom=is_custom)
         self.db.add(order)
         await self.db.commit()
         await self.db.refresh(order)

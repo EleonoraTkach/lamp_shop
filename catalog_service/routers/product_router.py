@@ -52,3 +52,12 @@ async def get_products_by_category(
     service: ProductService = Depends(get_product_service),
 ):
     return await service.get_by_category(category_id, delete_flg,skip, limit)
+
+@router.get("/products")
+async def get_all_products(
+    skip: int = 0,
+    limit: int = 100,
+    delete_flg: bool | None = None,
+    service: ProductService = Depends(get_product_service),
+):
+    return await service.get_all(delete_flg,skip, limit)

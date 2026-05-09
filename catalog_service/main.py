@@ -1,8 +1,15 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
 import asyncpg
+
 from db import DATABASE_URL
 from db import init_db
-from routers import category_router,product_router
+
+from routers import (
+    category_router,
+    product_router,
+)
 
 app = FastAPI(
     title="Пример FastAPI",
@@ -10,17 +17,32 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.on_event("startup")
 async def startup():
     await init_db()
-
 
 app.include_router(category_router)
 app.include_router(product_router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Привет! Интерактивная документация: /docs и /redoc"}
+    return {
+        "message":
+        "Привет! Интерактивная документация: /docs и /redoc"
+    }
 
 '''
 @app.get("/health")
@@ -30,9 +52,17 @@ async def root():
 
 async def get_databases():
   conn = await asyncpg.connect(DATABASE_URL)
+
   try:
-    result = await conn.fetch("SELECT datname FROM pg_database")
-    return [record['datname'] for record in result]
+    result = await conn.fetch(
+        "SELECT datname FROM pg_database"
+    )
+
+    return [
+        record['datname']
+        for record in result
+    ]
+
   finally:
     await conn.close()
 '''

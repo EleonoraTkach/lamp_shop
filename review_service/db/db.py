@@ -3,7 +3,7 @@ import os
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from models import Category,Product,Base
+from models import Review,Base
 
 
 DB_USER = os.getenv("DB_USER", "user")
@@ -24,8 +24,7 @@ AsyncSessionLocal = sessionmaker(
 
 async def init_db():
     async with engine.begin() as conn:
-        #await conn.run_sync(Base.metadata.drop_all)
-        #print("Удалили")
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_session():

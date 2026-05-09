@@ -11,10 +11,10 @@ class ProductCreate(BaseModel):
 
 
 class ProductUpdate(BaseModel):
-    name: Optional[str]
-    description: Optional[str]
-    price: Optional[condecimal(max_digits=8, decimal_places=2)]
-    quantity: Optional[int]
+    name: str | None = None
+    description: str | None = None
+    price: condecimal(max_digits=8, decimal_places=2) | None = None
+    quantity: int | None = None
 
 
 class ProductOut(BaseModel):

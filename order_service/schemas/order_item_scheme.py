@@ -4,22 +4,36 @@ from datetime import datetime
 
 
 class OrderItemBase(BaseModel):
-    product_id: int
     quantity: int
 
 
-class OrderItemCreate(OrderItemBase):
-    pass
+class RegularOrderItemCreate(OrderItemBase):
+    product_id: int
 
-class OrderItemBulkCreate(BaseModel):
-    items: list[OrderItemCreate]
+class CustomOrderItemCreate(OrderItemBase):
+    image_url: str
+
+class RegularOrderItemBulkCreate(BaseModel):
+    items: list[RegularOrderItemCreate]
+
+class CustomOrderItemBulkCreate(BaseModel):
+    items: list[CustomOrderItemCreate]
 
 
 class OrderItemUpdate(BaseModel):
     quantity: Optional[int]
 
 
-class OrderItemResponse(OrderItemBase):
+class RegularOrderItemResponse(RegularOrderItemCreate):
+    order_id: int
+    created_at: datetime
+    updated_at: datetime
+    is_deleted: bool
+
+    class Config:
+        from_attributes = True
+
+class CustomOrderItemResponse(CustomOrderItemCreate):
     order_id: int
     created_at: datetime
     updated_at: datetime
